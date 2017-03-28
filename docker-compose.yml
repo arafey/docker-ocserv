@@ -1,0 +1,23 @@
+ocserv:
+  image: jasl8r/ocserv
+  restart: always
+  ports:
+    - "443:443/tcp"
+    - "443:443/udp"
+  environment:
+    - OCSERV_TCP_PORT=443
+    - OCSERV_UDP_PORT=443
+    - OCSERV_CA_CN=ca.com
+    - OCSERV_CA_ORG=My CA
+    - OCSERV_CA_DAYS=365
+    - OCSERV_HOST_CN=example.com
+    - OCSERV_HOST_ORG=My Organization
+    - OCSERV_HOST_DAYS=365
+    - OCSERV_MAX_CLIENTS=10
+    - OCSERV_MAX_SAME_CLIENTS=2
+    - OCSERV_DEFAULT_DOMAIN=example.com
+    - OCSERV_IPV4_NETWORK=192.168.99.0/24
+    - OCSERV_DNS=8.8.8.8
+  volumes:
+    - ./data:/etc/ocserv/data
+  privileged: true
