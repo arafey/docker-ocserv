@@ -47,10 +47,8 @@ OCSERV_IPV4_NETWORK=${OCSERV_IPV4_NETWORK:-192.168.99.0/24}
 OCSERV_DNS=${OCSERV_DNS:-}
 OCSERV_ROUTES=${OCSERV_ROUTES:-}
 OCSERV_NO_ROUTES=${OCSERV_NO_ROUTES:-}
-
-if [[ -n "${OCSERV_DNS}" ]]; then
-	OCSERV_DNS="dns = ${OCSERV_DNS}"
-fi
+OCSERV_RESTRICTED_PORTS=${OCSERV_RESTRICTED_PORTS:-}
+OCSERV_TUNNEL_ALL_DNS=${OCSERV_RESTRICTED_PORTS:-}
 
 cd /etc/ocserv
 cp ocserv.conf.template ocserv.conf
@@ -60,7 +58,19 @@ sed -i "s|{{OCSERV_MAX_CLIENTS}}|${OCSERV_MAX_CLIENTS}|g" ocserv.conf
 sed -i "s|{{OCSERV_MAX_SAME_CLIENTS}}|${OCSERV_MAX_SAME_CLIENTS}|g" ocserv.conf
 sed -i "s|{{OCSERV_DEFAULT_DOMAIN}}|${OCSERV_DEFAULT_DOMAIN}|g" ocserv.conf
 sed -i "s|{{OCSERV_IPV4_NETWORK}}|${OCSERV_IPV4_NETWORK}|g" ocserv.conf
-sed -i "s|{{OCSERV_DNS}}|${OCSERV_DNS}|g" ocserv.conf
+sed -i "s|{{OCSERV_RESTRICTED_PORTS}}|${OCSERV_RESTRICTED_PORTS}|g" ocserv.conf
+
+if [[ -n "${OCSERV_DNS}" ]]; then
+	for DNS in $(echo ${OCSERV_DNS} | tr "," "\n"); do
+		echo "dns = ${DNS}" >> ocserv.conf
+	done
+fi
+
+if [[ -n "${OCSERV_DNS_DOMAINS}" ]]; then
+	for DNS_DOMAIN in $(echo ${OCSERV_DNS_DOMAINS} | tr "," "\n"); do
+		echo "split-dns = ${DNS_DOMAIN}" >> ocserv.conf
+	done
+fi
 
 for ROUTE in $(echo ${OCSERV_ROUTES} | tr "," "\n"); do
 	echo "route = ${ROUTE}" >> ocserv.conf
@@ -69,6 +79,14 @@ done
 for NO_ROUTE in $(echo ${OCSERV_NO_ROUTES} | tr "," "\n"); do
 	echo "no-route = ${NO_ROUTE}" >> ocserv.conf
 done
+
+if [[ -n "${OCSERV_RESTRICTED_PORTS}" ]]; then
+	echo "restrict-user-to-ports = \"${OCSERV_RESTRICTED_PORTS}\"" >> ocserv.conf
+fi
+
+if [[ -n "${OCSERV_TUNNEL_ALL_DNS}" ]]; then
+	echo "tunnel-all-dns = ${OCSERV_TUNNEL_ALL_DNS}" >> ocserv.conf
+fi
 
 echo "Configuring network"
 

@@ -8,7 +8,7 @@ RUN buildDeps="curl g++ gnutls-dev gpgme libev-dev libnl3-dev libseccomp-dev \
 		linux-headers linux-pam-dev lz4-dev make readline-dev tar xz" \
 	&& set -x \
 	&& apk update \
-	&& apk add gnutls gnutls-utils iptables libev libintl libnl3 libseccomp linux-pam lz4 openssl readline sed \
+	&& apk add gnutls gnutls-utils iptables ip6tables libev libintl libnl3 libseccomp linux-pam lz4 openssl readline sed \
 	&& apk add $buildDeps \
 	&& curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-${OCSERV_VERSION}.tar.xz" -o ocserv.tar.xz \
 	&& curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-${OCSERV_VERSION}.tar.xz.sig" -o ocserv.tar.xz.sig \
@@ -18,7 +18,7 @@ RUN buildDeps="curl g++ gnutls-dev gpgme libev-dev libnl3-dev libseccomp-dev \
 	&& tar -xf ocserv.tar.xz -C /usr/src/ocserv --strip-components=1 \
 	&& rm ocserv.tar.xz* \
 	&& cd /usr/src/ocserv \
-	&& ./configure \
+	&& ./configure --prefix=/usr \
 	&& make \
 	&& make install \
 	&& mkdir -p /etc/ocserv \

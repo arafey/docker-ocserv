@@ -422,7 +422,6 @@ ipv4-network = {{OCSERV_IPV4_NETWORK}}
 # The advertized DNS server. Use multiple lines for
 # multiple servers.
 # dns = fc00::4be0
-{{OCSERV_DNS}}
 
 # The NBNS server (if any)
 #nbns = 192.168.1.3
