@@ -1,36 +1,40 @@
-FROM alpine:3.4
-MAINTAINER jasl8r@alum.wpi.edu
+FROM ubuntu:20.04
 
-ENV OCSERV_VERSION=0.11.7
+RUN [ -z "$(apt-get indextargets)" ]
 
-RUN buildDeps="curl g++ gnutls-dev gpgme libev-dev libnl3-dev libseccomp-dev \
-		linux-headers linux-pam-dev lz4-dev make readline-dev tar xz" \
-	&& set -x \
-	&& apk update \
-	&& apk add gnutls gnutls-utils iptables ip6tables libev libintl libnl3 libseccomp linux-pam lz4 openssl readline sed \
-	&& apk add $buildDeps \
-	&& curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-${OCSERV_VERSION}.tar.xz" -o ocserv.tar.xz \
-	&& mkdir -p /usr/src/ocserv \
-	&& tar -xf ocserv.tar.xz -C /usr/src/ocserv --strip-components=1 \
-	&& rm ocserv.tar.xz \
-	&& cd /usr/src/ocserv \
-	&& ./configure --prefix=/usr \
-	&& make \
-	&& make install \
-	&& mkdir -p /etc/ocserv \
-	&& cd / \
-	&& rm -fr /usr/src/ocserv \
-	&& apk del $buildDeps \
-	&& rm -rf /var/cache/apk/*
+RUN set -xe  \
+	&& echo '#!/bin/sh' > /usr/sbin/policy-rc.d  \
+	&& echo 'exit 101' >> /usr/sbin/policy-rc.d  \
+	&& chmod +x /usr/sbin/policy-rc.d  \
+	&& dpkg-divert --local --rename --add /sbin/initctl  \
+	&& cp -a /usr/sbin/policy-rc.d /sbin/initctl  \
+	&& sed -i 's/^exit.*/exit 0/' /sbin/initctl  \
+	&& echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup  \
+	&& echo 'DPkg::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' > /etc/apt/apt.conf.d/docker-clean  \
+	&& echo 'APT::Update::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' >> /etc/apt/apt.conf.d/docker-clean  \
+	&& echo 'Dir::Cache::pkgcache ""; Dir::Cache::srcpkgcache "";' >> /etc/apt/apt.conf.d/docker-clean  \
+	&& echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/docker-no-languages  \
+	&& echo 'Acquire::GzipIndexes "true"; Acquire::CompressionTypes::Order:: "gz";' > /etc/apt/apt.conf.d/docker-gzip-indexes  \
+	&& echo 'Apt::AutoRemove::SuggestsImportant "false";' > /etc/apt/apt.conf.d/docker-autoremove-suggests
 
-WORKDIR /etc/ocserv
+RUN mkdir -p /run/systemd  \
+	&& echo 'docker' > /run/systemd/container
 
-COPY ocserv.conf.template /etc/ocserv/ocserv.conf.template
-COPY docker-entrypoint.sh /entrypoint.sh
+CMD ["/bin/bash"]
 
-VOLUME /etc/ocserv/data
+RUN apt-get update  \
+	&& apt-get install -y --no-install-recommends ca-certificates curl gnutls-bin iptables ocserv openconnect  \
+	&& rm -rf /var/lib/apt/lists/*
+
+RUN curl -LO https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64  \
+	&& mv confd-0.16.0-linux-amd64 /usr/bin/confd  \
+	&& chmod +x /usr/bin/confd
+
+COPY confd/ /etc/confd/
+COPY vpnc/ /etc/vpnc/
+COPY entrypoint.sh /entrypoint.sh
+COPY ocrouter/ /etc/ocrouter/
+
+ENV OCROUTER_NETWORK=192.168.81.0/24 OCROUTER_RUNCSD=true OCROUTER_VERBOSE=true
 
 ENTRYPOINT ["/entrypoint.sh"]
-
-EXPOSE 443
-CMD ["ocserv", "-c", "/etc/ocserv/ocserv.conf", "-f"]

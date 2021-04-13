@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# List of parameters passed through environment
+#* VPNGATEWAY                   -- vpn gateway address (always present)
+#* TUNDEV                       -- tunnel device (always present)
+#* INTERNAL_IP4_ADDRESS         -- address (always present)
+#* INTERNAL_IP4_MTU             -- mtu (often unset)
+#* INTERNAL_IP4_NETMASK         -- netmask (often unset)
+#* INTERNAL_IP4_NETMASKLEN      -- netmask length (often unset)
+#* INTERNAL_IP4_NETADDR         -- address of network (only present if netmask is set)
+#* INTERNAL_IP4_DNS             -- list of dns servers
+#* INTERNAL_IP4_NBNS            -- list of wins servers
+#* INTERNAL_IP6_ADDRESS         -- IPv6 address
+#* INTERNAL_IP6_NETMASK         -- IPv6 netmask
+#* INTERNAL_IP6_DNS             -- IPv6 list of dns servers
+#* CISCO_DEF_DOMAIN             -- default domain name
+#* CISCO_BANNER                 -- banner from server
+#* CISCO_SPLIT_INC              -- number of networks in split-network-list
+#* CISCO_SPLIT_INC_%d_ADDR      -- network address
+#* CISCO_SPLIT_INC_%d_MASK      -- subnet mask (for example: 255.255.255.0)
+#* CISCO_SPLIT_INC_%d_MASKLEN   -- subnet masklen (for example: 24)
+#* CISCO_SPLIT_INC_%d_PROTOCOL  -- protocol (often just 0)
+#* CISCO_SPLIT_INC_%d_SPORT     -- source port (often just 0)
+#* CISCO_SPLIT_INC_%d_DPORT     -- destination port (often just 0)
+#* CISCO_IPV6_SPLIT_INC         -- number of networks in IPv6 split-network-list
+#* CISCO_IPV6_SPLIT_INC_%d_ADDR -- IPv6 network address
+#* CISCO_IPV6_SPLIT_INC_$%d_MASKLEN -- IPv6 subnet masklen
+
+set -e
+
+ocproxy_stop() {
+    occtl stop now
+}
+
+ocproxy_iptables() {
+    iptables -t nat -D POSTROUTING -o tun0 -j MASQUERADE
+}
+
+ocproxy_stop
+ocproxy_iptables
+
+exit 0

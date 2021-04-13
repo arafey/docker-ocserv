@@ -1,0 +1,10 @@
+[template]
+src = "ocserv.conf.tmpl"
+dest = "/etc/ocserv/ocserv.conf"
+keys = [
+    "/ocrouter/domain",
+    "/ocrouter/dns",
+    "/ocrouter/network",
+    "/ocrouter/noroutes",
+    "/ocrouter/routes",
+]
