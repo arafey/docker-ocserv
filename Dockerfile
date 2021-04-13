@@ -1,7 +1,7 @@
 FROM alpine:3.4
 MAINTAINER jasl8r@alum.wpi.edu
 
-ENV OCSERV_VERSION=0.11.7 \
+ENV OCSERV_VERSION=0.11.7
 
 RUN buildDeps="curl g++ gnutls-dev gpgme libev-dev libnl3-dev libseccomp-dev \
 		linux-headers linux-pam-dev lz4-dev make readline-dev tar xz" \
